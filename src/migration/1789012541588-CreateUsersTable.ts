@@ -20,7 +20,7 @@ export class CreateUsersTable1789012541588 implements MigrationInterface {
                         {
                             name: "email",
                             type: "varchar",
-                            isUnique: true
+                            isUnique: true,
                         },
                         {
                             name: "situation_Id",

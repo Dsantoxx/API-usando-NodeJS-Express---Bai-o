@@ -1,5 +1,7 @@
 import "reflect-metadata"
 import {DataSource} from "typeorm";
+import { Situation } from "./entity/Situations";
+import { User } from "./entity/User";
 
 //MPORTAR VARIAVEIS DE AMBIENTE
 import dotenv from 'dotenv';
@@ -18,7 +20,15 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_DATABASE,
     synchronize: false,
     logging: true,
-    entities: [],
+    entities: [Situation, User],
     subscribers: [],
     migrations: [__dirname + "/migration/*.{js,ts}"],
-})
+});
+
+//INICIALIZAR A CONEXAO COM O BANCO DE DADOS
+
+AppDataSource.initialize().then(()=>(
+    console.log("Conexão do banco de dados realizada com sucesso!")
+)).catch((error)=>(
+    console.log("Erro na conexão do banco de dados falhou!",error)
+))
