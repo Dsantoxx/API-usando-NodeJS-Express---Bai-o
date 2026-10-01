@@ -13,7 +13,7 @@ export class Situation {
     createAt!: Date;
 
     @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP" })
-    updateAt!: Date;
+    updatedAt!: Date;
 
     @OneToMany(() => User, (user) => user.situation)
     users!: User[]

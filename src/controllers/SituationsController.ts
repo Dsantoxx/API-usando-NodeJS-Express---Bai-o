@@ -6,9 +6,57 @@ import { AppDataSource } from '../data-source';
 //CRIAR APLICACAO EXPRESS
 const router = express.Router();
 
-//CRIAR ROTA GET PRINCIPAL
-router.get("/situations", (req: Request, res: Response) => {
-    res.send("Bem-vindo Pessoal");
+//CRIAR A LISTA
+router.get("/situations", async (req: Request, res: Response) => {
+    try {
+        const SituationRepository = AppDataSource.getRepository(Situation);
+
+        const situations = await SituationRepository.find();
+
+        res.status(200).json(situations);
+        return
+
+    } catch (error) {
+        console.error("Erro ao listar situações:", error);
+        res.status(500).json({
+            mensagem: "Erro ao listar situações"
+        });
+        return
+    }
+});
+
+// VISUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
+router.get("/situations/:id", async (req: Request, res: Response) => {
+
+    try {
+
+        const id = Number(req.params.id);
+
+        const SituationRepository = AppDataSource.getRepository(Situation);
+
+        const situation = await SituationRepository.findOneBy({
+            id: id
+        });
+
+        if (!situation) {
+            res.status(404).json({
+                mensagem: "Situação não encontrada!"
+            });
+            return;
+        }
+
+        res.status(200).json(situation);
+        return;
+
+    } catch (error) {
+
+        console.error("Erro ao buscar situação:", error);
+
+        res.status(500).json({
+            mensagem: "Erro ao buscar situação"
+        });
+        return;
+    }
 });
 
 //CRIAR ROTA POST
