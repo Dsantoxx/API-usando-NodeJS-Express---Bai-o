@@ -53,7 +53,7 @@ router.get("/situations/:id", async (req: Request, res: Response) => {
         console.error("Erro ao buscar situação:", error);
 
         res.status(500).json({
-            mensagem: "Erro ao buscar situação"
+            mensagem: "Erro ao visualizar situação"
         });
         return;
     }
@@ -83,6 +83,48 @@ router.post("/situations", async (req: Request, res: Response) => {
     });
 }
 
+});
+
+// VISUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
+router.put("/situations/:id", async (req: Request, res: Response) => {
+
+    try {
+
+        const id = Number(req.params.id);
+
+        var data = req.body;
+
+        const SituationRepository = AppDataSource.getRepository(Situation);
+
+        const situation = await SituationRepository.findOneBy({
+            id: id
+        });
+
+        if (!situation) {
+            res.status(404).json({
+                mensagem: "Situação não encontrada!"
+            });
+            return;
+        }
+
+        //ATUALIZA OS DADOS
+        SituationRepository.merge(situation, data);
+
+        //SALVAR AS ALTERAÇÕES DE DADOS
+        const updatedSituation = await SituationRepository.save(situation);
+
+        res.status(200).json({
+            messagem : "Situação atualizada com sucesso",
+            situation : updatedSituation,
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            mensagem: "Erro ao editar situação"
+        });
+        return;
+    }
 });
 
 //EXPORTAR A INSTRUÇÃO DA ROTA
