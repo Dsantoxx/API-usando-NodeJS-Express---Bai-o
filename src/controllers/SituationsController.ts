@@ -59,7 +59,7 @@ router.get("/situations/:id", async (req: Request, res: Response) => {
     }
 });
 
-//CRIAR ROTA POST
+// CADASTRA ITENS NO BANCO DE DADOS
 router.post("/situations", async (req: Request, res: Response) => {
 
     try{
@@ -85,7 +85,7 @@ router.post("/situations", async (req: Request, res: Response) => {
 
 });
 
-// VISUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
+// FAZ A ATUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
 router.put("/situations/:id", async (req: Request, res: Response) => {
 
     try {
@@ -122,6 +122,42 @@ router.put("/situations/:id", async (req: Request, res: Response) => {
 
         res.status(500).json({
             mensagem: "Erro ao editar situação"
+        });
+        return;
+    }
+});
+
+// REMOVE O ITEM CADASTRADO NO BANCO DE DADOS
+router.delete("/situations/:id", async (req: Request, res: Response) => {
+
+    try {
+
+        const id = Number(req.params.id);
+
+        const SituationRepository = AppDataSource.getRepository(Situation);
+
+        const situation = await SituationRepository.findOneBy({
+            id: id
+        });
+
+        if (!situation) {
+            res.status(404).json({
+                mensagem: "Situação não encontrada!"
+            });
+            return;
+        }
+
+        //REMOVER OS DADOS NO BACNO DE DADOS
+        await SituationRepository.remove(situation);
+
+        res.status(200).json({
+            messagem : "Situação removida com sucesso",
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            mensagem: "Erro ao remover situação"
         });
         return;
     }
