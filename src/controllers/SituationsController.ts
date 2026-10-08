@@ -7,21 +7,62 @@ import { AppDataSource } from '../data-source';
 const router = express.Router();
 
 //CRIAR A LISTA
+
 router.get("/situations", async (req: Request, res: Response) => {
     try {
         const SituationRepository = AppDataSource.getRepository(Situation);
 
-        const situations = await SituationRepository.find();
+        // Número de itens por página
+        const limite = 1;
 
-        res.status(200).json(situations);
-        return
+        // Página solicitada
+        const page = Number(req.query.page) || 1;
+
+        // Contar registros
+        const totalSituations = await SituationRepository.count();
+
+        if (totalSituations === 0) {
+            res.status(200).json({
+                mensagem: "Nenhuma situação encontrada!"
+            });
+            return;
+        }
+
+        // Calcular última página
+        const lastPage = Math.ceil(totalSituations / limite);
+
+        // Validar página
+        if (page < 1 || !Number.isInteger(page) || page > lastPage) {
+            res.status(400).json({
+                mensagem: `Página inválida. O total de páginas é ${lastPage}`
+            });
+            return;
+        }
+
+        // Calcular offset
+        const offset = (page - 1) * limite;
+
+        // Buscar registros com paginação
+        const situations = await SituationRepository.find({
+            skip: offset,
+            take: limite,
+            order: { id: "DESC" }
+        });
+
+        res.status(200).json({
+            currentPage: page,
+            lastPage,
+            totalSituations,
+            situations
+        });
 
     } catch (error) {
         console.error("Erro ao listar situações:", error);
+
         res.status(500).json({
             mensagem: "Erro ao listar situações"
         });
-        return
+        return;
     }
 });
 
@@ -72,7 +113,7 @@ router.post("/situations", async (req: Request, res: Response) => {
         await SituationRepository.save(newSituation);
 
         res.status(200).json({
-            messagem : "Situação cadastrada com sucesso",
+            mensagem : "Situação cadastrada com sucesso",
             situation : newSituation,
         })
     } catch (error) {
