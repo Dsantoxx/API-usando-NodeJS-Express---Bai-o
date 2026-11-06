@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import { Situation } from '../entity/Situations';
 import { AppDataSource } from '../data-source';
 import { PaginationService } from '../services/paginationService';
+import * as yup from 'yup';
 
 //CRIAR APLICACAO EXPRESS
 const router = express.Router();
@@ -71,37 +72,96 @@ router.get("/situations/:id", async (req: Request, res: Response) => {
 // CADASTRA ITENS NO BANCO DE DADOS
 router.post("/situations", async (req: Request, res: Response) => {
 
-    try{
-        var data = req.body;
+    try {
+        const data = req.body;
+
+        console.log("POST SITUATIONS EXECUTADO");
+        console.log("Dados recebidos:", data);
+
+        // VALIDAÇÃO COM YUP
+        const schema = yup.object().shape({
+            nameSituation: yup.string()
+                .trim()
+                .required("O campo nome é obrigatório")
+                .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+        });
+
+        // VALIDAR ANTES DE SALVAR
+        const validatedData = await schema.validate(data, {
+            abortEarly: false
+        });
+
+        console.log("VALIDAÇÃO APROVADA");
 
         const SituationRepository = AppDataSource.getRepository(Situation);
 
-        const newSituation = SituationRepository.create(data);
+        const newSituation = SituationRepository.create(validatedData);
 
         await SituationRepository.save(newSituation);
 
         res.status(200).json({
-            mensagem : "Situação cadastrada com sucesso",
-            situation : newSituation,
-        })
+            mensagem: "Situação cadastrada com sucesso",
+            situation: newSituation
+        });
+        return;
+
     } catch (error) {
-    console.error("Erro ao cadastrar situação:", error);
 
-    res.status(500).json({
-        mensagem: "Erro ao cadastrar situação"
-    });
-}
+        if (error instanceof yup.ValidationError) {
 
+            console.log("ERRO DE VALIDAÇÃO:", error.errors);
+
+            res.status(400).json({
+                mensagem: error.errors
+            });
+            return;
+        }
+
+        console.error("Erro ao cadastrar situação:", error);
+
+        res.status(500).json({
+            mensagem: "Erro ao cadastrar situação"
+        });
+        return;
+    }
 });
 
-// FAZ A ATUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
+
+
+ // FAZ A ATUALIZAÇÃO DO ITEM CADASTRADO EM SITUAÇÃO
 router.put("/situations/:id", async (req: Request, res: Response) => {
+
+    console.log("TESTE PUT COM YUP");
+    console.log("DADOS RECEBIDOS:", req.body);
 
     try {
 
         const id = Number(req.params.id);
 
         var data = req.body;
+
+        // VALIDAR O ID
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({
+                mensagem: "ID da situação inválido"
+            });
+            return;
+        }
+
+        // CRIAR VALIDAÇÃO COM YUP
+        const schema = yup.object().shape({
+            nameSituation: yup.string()
+                .trim()
+                .required("O campo nome é obrigatório")
+                .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+        });
+
+        // VALIDAR OS DADOS RECEBIDOS
+        data = await schema.validate(data, {
+            abortEarly: false
+        });
+
+        console.log("VALIDAÇÃO YUP REALIZADA COM SUCESSO!");
 
         const SituationRepository = AppDataSource.getRepository(Situation);
 
@@ -116,18 +176,34 @@ router.put("/situations/:id", async (req: Request, res: Response) => {
             return;
         }
 
-        //ATUALIZA OS DADOS
+        // ATUALIZA OS DADOS
         SituationRepository.merge(situation, data);
 
-        //SALVAR AS ALTERAÇÕES DE DADOS
+        // SALVAR AS ALTERAÇÕES
         const updatedSituation = await SituationRepository.save(situation);
 
+        console.log("SITUAÇÃO ATUALIZADA COM SUCESSO!");
+
         res.status(200).json({
-            messagem : "Situação atualizada com sucesso",
-            situation : updatedSituation,
-        })
+            mensagem: "Situação atualizada com sucesso",
+            situation: updatedSituation
+        });
+        return;
 
     } catch (error) {
+
+        // ERRO DE VALIDAÇÃO DO YUP
+        if (error instanceof yup.ValidationError) {
+
+            console.log("ERRO DE VALIDAÇÃO:", error.errors);
+
+            res.status(400).json({
+                mensagem: error.errors
+            });
+            return;
+        }
+
+        console.error("Erro ao editar situação:", error);
 
         res.status(500).json({
             mensagem: "Erro ao editar situação"
@@ -135,6 +211,8 @@ router.put("/situations/:id", async (req: Request, res: Response) => {
         return;
     }
 });
+
+
 
 // REMOVE O ITEM CADASTRADO NO BANCO DE DADOS
 router.delete("/situations/:id", async (req: Request, res: Response) => {

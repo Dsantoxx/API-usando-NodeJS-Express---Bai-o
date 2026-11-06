@@ -141,7 +141,7 @@ npx typeorm migration:run -d dist/data-source.js
 
 Validar formulário.
 ```
-npm i yup
+npm list yup
 ```
 
 Permitir requisição externa.
