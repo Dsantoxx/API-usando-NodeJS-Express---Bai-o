@@ -4,6 +4,9 @@ import express from 'express';
 //MPORTAR VARIAVEIS DE AMBIENTE
 import dotenv from 'dotenv';
 
+//IMPORTAR A BIBLIOTECA PARA PERMITIR CONEXÃO EXTERNA
+import cors from 'cors';
+
 //CARREGANDO AS VARIAVEIS DO .env
 dotenv.config();
 
@@ -13,7 +16,11 @@ const app = express();
 //CRIAR UM MIDDLEWARE PARA RECEBER OS DADOS NO CORPO DA REQUISICAO
 app.use(express.json());
 
+//CRIAR O MIDDLEWARE PARA PERMITIR REQUISIÇÃO EXTERNA
+app.use(cors());
+
 //INCLUIR CONTROLLERS
+import TestConnectionController from"./controllers/TestConnectionController";
 import AuthController from"./controllers/AuthController";
 import SituationsController from"./controllers/SituationsController";
 import ProductsController from"./controllers/ProductsController";
@@ -21,7 +28,8 @@ import ProductsSituationsController from"./controllers/ProductsSituationsControl
 import ProductsCategoriesController from"./controllers/ProductsCategoriesController";
 
 //CRIAR ROTA
-app.use('/', AuthController);
+app.use("/", TestConnectionController);
+app.use("/", AuthController);
 app.use("/", SituationsController);
 app.use("/", ProductsController);
 app.use("/", ProductsSituationsController);
